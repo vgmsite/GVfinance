@@ -41,6 +41,7 @@ input,select{font:400 1rem "Source Sans 3",sans-serif;padding:.65rem .75rem;bord
 .ck{display:flex;align-items:center;gap:.5rem;align-self:end}.ck input{width:1.2rem;height:1.2rem}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:0 .8rem}
 .st{display:inline-flex;align-items:center;gap:.5rem}.st button{width:2.2rem;height:2.2rem;border:0;border-radius:50%;background:var(--chip);color:var(--acc);font-size:1.2rem;font-weight:700;cursor:pointer}.st b{min-width:1.5rem;text-align:center}
+.st input{width:3.6rem;text-align:center;padding:.45rem .3rem;font-weight:700}
 .acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
 .sw{width:2.2rem;height:2.2rem;border-radius:50%;border:3px solid var(--card);outline:1px solid var(--line);cursor:pointer}.sw.on{outline:2px solid var(--ink)}
 .bar,.side{background:var(--card);border-color:var(--line)}
@@ -74,13 +75,18 @@ const num=v=>{const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6),sum=(a,f)=>a.reduce((x,y)=>x+f(y),0);
 const gross=s=>sum(s.it,i=>i.q*i.pr),tot=s=>Math.max(0,gross(s)-(s.ds||0)),cst=s=>sum(s.it,i=>i.q*i.c),qt=s=>sum(s.it,i=>i.q),pago=s=>sum(s.pg,x=>x.v),saldo=s=>Math.max(0,tot(s)-pago(s)),quit=s=>saldo(s)<.005;
 const blank=()=>({cfg:{nome:'GV Sweet',metaF:0,metaL:0,cor:'#1f4fd8',loc:'Escola, Fora, Entrega',pg:'Pix, Dinheiro',tema:'claro'},
- p:[['Ninho',10,3],['Ninho + KitKat',12,4],['Nutella',13,4],['Ninho + Nutella',15,5],['Ferrero',14,5],['Kinder Bueno',15,5]].map((d,i)=>({id:'p'+(i+1),n:d[0],pr:d[1],c:d[2],on:true})),s:[],c:[],o:[],e:[],d:[],t:0});
+ p:[['Ninho',10,3],['Ninho + KitKat',12,4],['Nutella',13,4],['Ninho + Nutella',15,5],['Ferrero',14,5],['Kinder Bueno',15,5]].map((d,i)=>({id:'p'+(i+1),n:d[0],pr:d[1],c:d[2],on:true})),s:[],c:[],o:[],e:[],d:[],pd:[],t:0});
 let S=blank();const LS='gvsweet-gestao-azul';let dbDoc=null;
 const adopt=o=>{const b=blank();S=Object.assign(b,o);S.cfg=Object.assign(b.cfg,o.cfg||{})};
 try{const l=JSON.parse(localStorage.getItem(LS)||'null');if(l&&l.s)adopt(l)}catch(e){}
 const list=k=>S.cfg[k].split(',').map(x=>x.trim()).filter(Boolean);
 let V={tab:'painel',per:'7',flt:'todas',cart:{},cl:'',loc:list('loc')[0]||'',date:today(),ds:'',mode:'now',m:list('pg')[0]||'',ent:'',due:''};
 let Q={cart:{},loc:list('loc')[0]||'',m:list('pg')[0]||'',cl:''};
+let PV={d:today(),cart:{},nt:''};
+const pQt=r=>sum(r.it,i=>i.q),pCs=r=>sum(r.it,i=>i.q*i.c);
+const bst=()=>{const m={};if(!S.pd.length)return m;const f=S.pd.reduce((a,r)=>r.d<a?r.d:a,'9999-99-99');S.pd.forEach(r=>r.it.forEach(i=>{m[i.n]=(m[i.n]||0)+i.q}));S.s.forEach(s=>{if(s.d>=f)s.it.forEach(i=>{if(i.n in m)m[i.n]-=i.q})});return m};
+const pTot=()=>{const P=S.p.filter(p=>p.on!==false);return [sum(P,p=>PV.cart[p.id]||0),sum(P,p=>(PV.cart[p.id]||0)*p.c)]};
+const updP=()=>{const [u,c]=pTot(),a=$('#pT'),b=$('#pB');if(a)a.textContent=u+' un · '+R(c);if(b)b.textContent='Registrar produção · '+u+' un · '+R(c)};
 const setSync=ok=>{const e=$('#sy');if(e)e.textContent=ok?'Salvo na sua conta':'Salvo neste aparelho'};
 function theme(){const r=document.documentElement;r.style.setProperty('--acc',S.cfg.cor);if(S.cfg.tema==='escuro')r.dataset.theme='dark';else r.removeAttribute('data-theme')}
 async function save(){S.t=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
@@ -91,7 +97,7 @@ const chips=(k,o,c)=>'<div class="chips">'+o.map(x=>`<button class="chip${c===x[
 const PER=[['0','Hoje'],['7','7 dias'],['m','Este mês'],['a','Tudo']];
 const grp=(L,f)=>{const m={};L.forEach(s=>f(s).forEach(x=>{const o=m[x.k]=m[x.k]||{k:x.k,q:0,f:0,l:0};o.q+=x.q;o.f+=x.f;o.l+=x.l}));return Object.values(m).sort((a,b)=>b.f-a.f)};
 const hb=(rows,u)=>{const mx=Math.max(1,...rows.map(r=>r.f));return rows.map(r=>`<div class="hb"><div class="r"><span>${esc(r.k)}</span><small>${r.q} ${u} · ${R(r.f)} · lucro <b class="${r.l>=0?'pos':'neg'}">${R(r.l)}</b></small></div><div class="tr"><i style="width:${r.f/mx*100}%"></i></div></div>`).join('')};
-const SEC=[['painel','Painel','Visão <em>geral.</em>','Um retrato fiel do seu negócio, sempre atualizado.'],['rapida','Venda rápida','Venda <em>rápida.</em>','Toque nos sabores, escolha o pagamento e registre em segundos.'],['vender','Vender','Registrar uma <em>venda.</em>','Escolha os sabores, defina o pagamento e pronto.'],['vendas','Vendas','Histórico de <em>vendas.</em>','Cada venda registrada, do pedido ao recebimento.'],['clientes','Clientes','Sua <em>clientela.</em>','Quem compra, quanto compra e o que ainda está por receber.'],['encomendas','Encomendas','<em>Encomendas</em> e celebrações.','Pedidos para datas especiais, com entrega marcada.'],['produtos','Produtos','O <em>cardápio.</em>','Sabores, preços e custos, para saber o que realmente rende.'],['estoque','Estoque','Despensa e <em>estoque.</em>','Tenha à mão tudo o que precisa para produzir.'],['despesas','Despesas','Despesas e <em>custos.</em>','Tudo o que sai, organizado por categoria.'],['config','Ajustes','<em>Ajustes</em> da casa.','Deixe o sistema do seu jeito.']];
+const SEC=[['painel','Painel','Visão <em>geral.</em>','Um retrato fiel do seu negócio, sempre atualizado.'],['rapida','Venda rápida','Venda <em>rápida.</em>','Toque nos sabores, escolha o pagamento e registre em segundos.'],['vender','Vender','Registrar uma <em>venda.</em>','Escolha os sabores, defina o pagamento e pronto.'],['vendas','Vendas','Histórico de <em>vendas.</em>','Cada venda registrada, do pedido ao recebimento.'],['clientes','Clientes','Sua <em>clientela.</em>','Quem compra, quanto compra e o que ainda está por receber.'],['encomendas','Encomendas','<em>Encomendas</em> e celebrações.','Pedidos para datas especiais, com entrega marcada.'],['produtos','Produtos','O <em>cardápio.</em>','Sabores, preços e custos, para saber o que realmente rende.'],['producao','Produção','A <em>produção.</em>','Registre o que saiu do forno, sabor por sabor, e quanto custou.'],['estoque','Estoque','Despensa e <em>estoque.</em>','Tenha à mão tudo o que precisa para produzir.'],['despesas','Despesas','Despesas e <em>custos.</em>','Tudo o que sai, organizado por categoria.'],['config','Ajustes','<em>Ajustes</em> da casa.','Deixe o sistema do seu jeito.']];
 const head=id=>{const i=SEC.findIndex(x=>x[0]===id);return `<div class="r"><div class="lb">${String(i+1).padStart(2,'0')} — ${SEC[i][1]}</div><small id="sy"></small></div><h1>${SEC[i][2]}</h1><p class="lede">${SEC[i][3]}</p>`};
 const cliS=n=>S.s.filter(s=>(s.cl||'').toLowerCase()===String(n).trim().toLowerCase());
 const waL=(tel,msg)=>{let d=String(tel).replace(/\D/g,'');if(d&&d.length<=11)d='55'+d;return 'https://wa.me/'+d+'?text='+encodeURIComponent(msg)};
@@ -121,10 +127,10 @@ function quick(){
  +`<div class="r"><b style="font-size:1.4rem">${R(T0)}</b><div class="acts" style="margin:0"><button class="btn s g" data-a="qclr">Limpar</button><button class="btn s" data-a="qreg">Registrar venda</button></div></div></div>`}
 function rapida(){return head('rapida')+quick()+'<div class="acts"><button class="chip" data-a="tab" data-v="vender">Precisa de desconto ou de entrada? Abrir o formulário completo</button></div>'}
 function painel(){
- const L=S.s.filter(inP),D=S.d.filter(x=>inP({d:x.d})),fat=sum(L,tot),cus=sum(L,cst),des=sum(D,x=>x.v),lu=fat-cus-des,q=sum(L,qt),rec=sum(L,pago),open=sum(S.s,saldo);
+ const L=S.s.filter(inP),D=S.d.filter(x=>inP({d:x.d})),PD=S.pd.filter(inP),fat=sum(L,tot),cus=sum(L,cst),des=sum(D,x=>x.v),lu=fat-cus-des,q=sum(L,qt),rec=sum(L,pago),open=sum(S.s,saldo),pst=sum(Object.values(bst()),v=>Math.max(0,v));
  const kp=(l,v,c,h)=>`<div class="k${h?' hi':''}"><small>${l}</small><b class="${c||''}">${v}</b></div>`;
  let h=head('painel')+'<button class="btn" style="margin-bottom:.5rem" data-a="tab" data-v="rapida">⚡ Venda rápida</button>'+chips('per',PER,V.per)+(S.s.length?'':'<div class="card empty">Ainda não há vendas. Registre a primeira em <b>Vender</b> e este painel ganha vida.</div>');
- h+='<div class="kp">'+kp('Faturamento',R(fat),'',1)+kp('Lucro líquido',R(lu),lu>=0?'pos':'neg')+kp('Custo de produção',R(cus))+kp('Despesas',R(des))+kp('Margem',(fat?Math.round(lu/fat*100):0)+'%')+kp('Brownies vendidos',q)+kp('Ticket médio',R(L.length?fat/L.length:0))+kp('Recebido',R(rec),'pos')+kp('A receber (total)',R(open),open?'neg':'')+'</div>';
+ h+='<div class="kp">'+kp('Faturamento',R(fat),'',1)+kp('Lucro líquido',R(lu),lu>=0?'pos':'neg')+kp('Custo de produção',R(cus))+kp('Despesas',R(des))+kp('Margem',(fat?Math.round(lu/fat*100):0)+'%')+kp('Brownies vendidos',q)+kp('Brownies produzidos',sum(PD,pQt))+kp('Custo produzido',R(sum(PD,pCs)))+(S.pd.length?kp('Prontos em estoque',pst):'')+kp('Ticket médio',R(L.length?fat/L.length:0))+kp('Recebido',R(rec),'pos')+kp('A receber (total)',R(open),open?'neg':'')+'</div>';
  const mo=today().slice(0,7),M=S.s.filter(s=>s.d.slice(0,7)===mo),mf=sum(M,tot),ml=mf-sum(M,cst)-sum(S.d.filter(x=>x.d.slice(0,7)===mo),x=>x.v),c=S.cfg;
  if(c.metaF>0||c.metaL>0){const pb=(l,v,m)=>m>0?`<div class="hb"><div class="r"><span>${l}</span><small>${R(v)} de ${R(m)} · ${Math.round(Math.max(0,v)/m*100)}%</small></div><div class="tr"><i style="width:${Math.min(100,Math.max(0,v)/m*100)}%"></i></div></div>`:'';h+='<h2>Metas do <em>mês.</em></h2><div class="card">'+pb('Faturamento',mf,c.metaF)+pb('Lucro líquido',ml,c.metaL)+'</div>'}
  const al=[];S.e.forEach(e=>{if(e.min>0&&e.q<=e.min)al.push('Estoque baixo: <b>'+esc(e.n||'item')+'</b> ('+e.q+' '+e.u+')')});
@@ -142,6 +148,16 @@ function painel(){
  const cl=grp(L.filter(s=>s.cl),s=>[{k:s.cl,q:qt(s),f:tot(s),l:tot(s)-cst(s)}]).slice(0,5);
  if(cl.length)h+='<h2>Clientes mais <em>fiéis.</em></h2><div class="card">'+hb(cl,'un')+'</div>';
  return h}
+function producao(){
+ const P=S.p.filter(p=>p.on!==false),[U,C]=pTot(),L=S.pd.filter(inP).sort((a,b)=>a.d<b.d?1:-1),st=bst(),sk=Object.keys(st);
+ let h=head('producao')+`<label>Data da produção<input type="date" data-pf="d" value="${PV.d}"></label><h2>O que você <em>produziu?</em></h2>`
+ +P.map(p=>`<div class="card r"><div><b>${esc(p.n)}</b><br><small>custo ${R(p.c)} por unidade</small></div><div class="st"><button data-a="pqty" data-id="${p.id}" data-d="-1" aria-label="Menos">−</button><input data-pq="${p.id}" inputmode="numeric" value="${PV.cart[p.id]||0}" aria-label="Quantidade de ${esc(p.n)}"><button data-a="pqty" data-id="${p.id}" data-d="1" aria-label="Mais">+</button></div></div>`).join('')
+ +`<label>Observação (opcional)<input data-pf="nt" value="${esc(PV.nt)}" placeholder="Ex.: fornada de sexta"></label><div class="card r"><span>Total da fornada</span><b id="pT">${U} un · ${R(C)}</b></div>`
+ +`<div class="stk"><button class="btn" data-a="preg" id="pB">Registrar produção · ${U} un · ${R(C)}</button></div>`;
+ if(sk.length)h+='<h2>Prontos para <em>vender.</em></h2><div class="card">'+sk.map(k=>`<div class="r"><span>${esc(k)}</span><b class="${st[k]<0?'neg':''}">${st[k]} un</b></div>`).join('')+'<small>Produzido menos vendido, a partir da primeira produção registrada.</small></div>';
+ h+='<h2>Histórico de <em>produção.</em></h2>'+chips('per',PER,V.per);
+ if(!L.length)return h+'<div class="card empty">Nenhuma produção neste período.</div>';
+ return h+`<div class="card r"><span>${sum(L,pQt)} brownies produzidos</span><b>${R(sum(L,pCs))}</b></div>`+L.map(r=>`<div class="card"><div class="r"><b>${fd(r.d)}</b><b>${R(pCs(r))}</b></div><small>${r.it.map(i=>i.q+'x '+esc(i.n)).join(', ')}${r.nt?' · '+esc(r.nt):''}</small><div style="margin-top:.3rem"><small>${pQt(r)} brownies · ${R(pCs(r)/pQt(r))} por unidade</small></div><div class="acts"><button class="btn s d" data-a="dr" data-t="pd" data-i="${r.id}">Excluir</button></div></div>`).join('')}
 function vender(){
  const P=S.p.filter(p=>p.on!==false),cart=P.filter(p=>V.cart[p.id]),G=sum(cart,p=>V.cart[p.id]*p.pr),ds=Math.min(G,num(V.ds)),T0=G-ds,Lc=T0-sum(cart,p=>V.cart[p.id]*p.c);
  const names=[...new Set(S.c.map(c=>c.n).concat(S.s.map(s=>s.cl)).filter(Boolean))];
@@ -167,7 +183,7 @@ function config(){const c=S.cfg,f=(k,l,ty)=>`<label>${l}<input data-cfg="${k}" d
  return head('config')+'<div class="card"><div class="fg">'+f('nome','Nome do negócio')+f('metaF','Meta de faturamento do mês (R$)','num')+f('metaL','Meta de lucro do mês (R$)','num')+'</div>'+f('loc','Locais de venda (separe por vírgula)')+f('pg','Formas de pagamento (separe por vírgula)')
  +`<label>Tema<select data-cfg="tema">${['claro','escuro'].map(x=>`<option${c.tema===x?' selected':''}>${x}</option>`).join('')}</select></label><div class="lb" style="margin-bottom:.4rem">Cor de destaque</div><div class="chips">${['#1f4fd8','#1e3a8a','#2563eb','#0ea5e9','#4f46e5','#0f766e'].map(x=>`<button class="sw${c.cor===x?' on':''}" style="background:${x}" data-a="cor" data-v="${x}" aria-label="Cor ${x}"></button>`).join('')}</div></div>`
  +'<h2>Segurança dos <em>dados.</em></h2><div class="card"><small>Seus dados ficam guardados neste aparelho e, quando possível, na sua conta. Vale baixar um backup de tempos em tempos.</small><div class="acts"><button class="btn s" data-a="bk">Baixar backup</button><button class="btn s g" data-a="csv">Exportar vendas (Excel)</button><label class="btn s g" style="margin:0;display:inline-block;color:var(--ink)">Importar backup<input id="imp" type="file" accept=".json" style="display:none"></label></div></div><div class="card"><small>Apagar tudo e voltar ao início.</small><div class="acts"><button class="btn s d" data-a="wipe">Apagar tudo</button></div></div>'}
-function render(){theme();const open=S.s.filter(s=>!quit(s)).length,V2={painel,rapida,vender,vendas,mais,config};
+function render(){theme();const open=S.s.filter(s=>!quit(s)).length,V2={painel,rapida,vender,vendas,mais,config,producao};
  $('#app').innerHTML=(T[V.tab]?tbl(V.tab):V2[V.tab]()),setSync(!!dbDoc&&S.sync);
  const bar=[['painel','◧','Painel'],['rapida','⚡','Rápida'],['vendas','☰','Vendas'],['clientes','◎','Clientes'],['mais','⋯','Mais']];
  $('#bar').innerHTML=bar.map(t=>`<button class="${V.tab===t[0]||(t[0]==='mais'&&!bar.some(b=>b[0]===V.tab))?'on':''}" data-a="tab" data-v="${t[0]}"><span>${t[1]}</span>${t[2]}${t[0]==='vendas'&&open?`<i class="bg2">${open}</i>`:''}</button>`).join('');
@@ -181,6 +197,9 @@ const A={tab:d=>{V.tab=d.v;render();scrollTo(0,0)},
   const later=Q.m==='later',nm=(Q.cl||'').trim();if(later&&!nm){toast('Informe o nome de quem vai pagar');return}
   const t=sum(it,i=>i.q*i.pr),d=today();if(nm&&!S.c.some(c=>c.n.toLowerCase()===nm.toLowerCase()))S.c.push({id:uid(),n:nm,tel:'',ob:''});
   S.s.unshift({id:uid(),d,cl:nm,loc:Q.loc,it,ds:0,pg:later?[]:[{d,v:t,m:Q.m}],due:''});Q.cart={};Q.cl='';save();render();toast('Venda registrada')},
+ pqty:d=>{PV.cart[d.id]=Math.max(0,(PV.cart[d.id]||0)+(+d.d));render()},
+ preg:()=>{const it=S.p.filter(p=>PV.cart[p.id]>0).map(p=>({n:p.n,q:PV.cart[p.id],c:p.c}));if(!it.length){toast('Informe a quantidade de algum sabor');return}
+  S.pd.unshift({id:uid(),d:PV.d||today(),it,nt:(PV.nt||'').trim()});PV.cart={};PV.nt='';save();render();toast('Produção registrada')},
 per:d=>{V.per=d.v;render()},flt:d=>{V.flt=d.v;render()},loc:d=>{V.loc=d.v;render()},pay:d=>{V.m=d.v;render()},mode:d=>{V.mode=d.v;render()},
  qty:d=>{V.cart[d.id]=Math.max(0,(V.cart[d.id]||0)+(+d.d));render()},
  reg:()=>{const it=S.p.filter(p=>V.cart[p.id]).map(p=>({n:p.n,q:V.cart[p.id],pr:p.pr,c:p.c}));if(!it.length){toast('Escolha pelo menos um brownie');return}
@@ -197,7 +216,7 @@ per:d=>{V.per=d.v;render()},flt:d=>{V.flt=d.v;render()},loc:d=>{V.loc=d.v;render
   dl('gv-sweet-vendas-'+today()+'.csv','\ufeff'+r.map(x=>x.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(';')).join('\n'))},
  wipe:(d,b)=>ask(b,'Tem certeza?',()=>{const c=S.cfg;S=blank();S.cfg=c;save();render();toast('Tudo apagado')})};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&A[b.dataset.a])A[b.dataset.a](b.dataset,b)});
-document.addEventListener('input',e=>{const f=e.target.dataset.f,q=e.target.dataset.q;if(f)V[f]=e.target.value;if(q)Q[q]=e.target.value});
+document.addEventListener('input',e=>{const f=e.target.dataset.f,q=e.target.dataset.q,pf=e.target.dataset.pf,pk=e.target.dataset.pq;if(f)V[f]=e.target.value;if(q)Q[q]=e.target.value;if(pf)PV[pf]=e.target.value;if(pk){PV.cart[pk]=Math.max(0,parseInt(e.target.value)||0);updP()}});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
  if(d.t){const r=S[d.t].find(x=>x.id===d.i);if(r){r[d.k]=t.type==='checkbox'?t.checked:d.ty==='num'?num(t.value):t.value;save()}}
  if(d.cfg){S.cfg[d.cfg]=d.ty==='num'?num(t.value):t.value;save();theme();if(d.cfg==='nome'||d.cfg==='tema')render()}
