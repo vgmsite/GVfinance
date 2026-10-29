@@ -78,7 +78,8 @@ const blank=()=>({cfg:{nome:'GV Sweet',metaF:0,metaL:0,cor:'#1f4fd8',loc:'Escola
  p:[['Ninho',10,3],['Ninho + KitKat',12,4],['Nutella',13,4],['Ninho + Nutella',15,5],['Ferrero',14,5],['Kinder Bueno',15,5]].map((d,i)=>({id:'p'+(i+1),n:d[0],pr:d[1],c:d[2],on:true})),s:[],c:[],o:[],e:[],d:[],pd:[],t:0});
 let S=blank();const LS='gvsweet-gestao-azul';let dbDoc=null;
 const adopt=o=>{const b=blank();S=Object.assign(b,o);S.cfg=Object.assign(b.cfg,o.cfg||{})};
-try{const l=JSON.parse(localStorage.getItem(LS)||'null');if(l&&l.s)adopt(l)}catch(e){}
+let hasL=false;try{const l=JSON.parse(localStorage.getItem(LS)||'null');if(l&&l.s){adopt(l);hasL=true}}catch(e){}
+if(!hasL){const d='2026-10-28',P=n=>S.p.find(p=>p.n===n),mk=(cl,a)=>({id:uid(),d,cl,loc:'Escola',it:a.map(([n,q])=>({n,q,pr:P(n).pr,c:P(n).c})),ds:0,pg:[],due:''});S.s=[mk('João',[['Ninho + Nutella',1]]),mk('Cassia',[['Ninho + Nutella',2]]),mk('Garcia',[['Ninho',1],['Ninho + Nutella',1]]),mk('Marcelo',[['Nutella',5]])];S.c=['João','Cassia','Garcia','Marcelo'].map(n=>({id:uid(),n,tel:'',ob:''}));S.t=1}
 const list=k=>S.cfg[k].split(',').map(x=>x.trim()).filter(Boolean);
 let V={tab:'painel',per:'7',flt:'todas',cart:{},cl:'',loc:list('loc')[0]||'',date:today(),ds:'',mode:'now',m:list('pg')[0]||'',ent:'',due:''};
 let Q={cart:{},loc:list('loc')[0]||'',m:list('pg')[0]||'',cl:''};
@@ -119,8 +120,8 @@ function tbl(name){const t=T[name];let rows=S[t.k].slice();if(t.sort)rows.sort(t
 function quick(){
  if(Q.m!=='later'&&!list('pg').includes(Q.m))Q.m=list('pg')[0]||'';
  if(!list('loc').includes(Q.loc))Q.loc=list('loc')[0]||'';
- const P=S.p.filter(p=>p.on!==false),sel=P.filter(p=>Q.cart[p.id]>0),T0=sum(sel,p=>Q.cart[p.id]*p.pr);
- return `<div class="card qk"><div class="r"><b>Venda rápida</b><small>Toque no sabor para somar</small></div><div class="qg">${P.map(p=>`<button class="qb" data-a="qadd" data-id="${p.id}"><span>${esc(p.n)}</span><small>${R(p.pr)}</small>${Q.cart[p.id]>0?`<i>${Q.cart[p.id]}</i>`:''}</button>`).join('')}</div>`
+ const SK=bst(),P=S.p.filter(p=>p.on!==false),sel=P.filter(p=>Q.cart[p.id]>0),T0=sum(sel,p=>Q.cart[p.id]*p.pr);
+ return `<div class="card qk"><div class="r"><b>Venda rápida</b><small>Toque no sabor para somar</small></div><div class="qg">${P.map(p=>`<button class="qb" data-a="qadd" data-id="${p.id}"><span>${esc(p.n)}</span><small>${R(p.pr)}${p.n in SK?' · '+(SK[p.n]-(Q.cart[p.id]||0))+' em estoque':''}</small>${Q.cart[p.id]>0?`<i>${Q.cart[p.id]}</i>`:''}</button>`).join('')}</div>`
  +(sel.length?`<div class="chips">${sel.map(p=>`<button class="chip" data-a="qsub" data-id="${p.id}">${Q.cart[p.id]}× ${esc(p.n)} ✕</button>`).join('')}</div>`:'')
  +chips('qloc',list('loc').map(x=>[x,esc(x)]),Q.loc)+chips('qpay',list('pg').map(x=>[x,esc(x)]).concat([['later','Pagar depois']]),Q.m)
  +(Q.m==='later'?`<label>Nome de quem vai pagar<input data-q="cl" value="${esc(Q.cl)}" placeholder="Nome do cliente" autocomplete="off"></label>`:'')
@@ -159,11 +160,11 @@ function producao(){
  if(!L.length)return h+'<div class="card empty">Nenhuma produção neste período.</div>';
  return h+`<div class="card r"><span>${sum(L,pQt)} brownies produzidos</span><b>${R(sum(L,pCs))}</b></div>`+L.map(r=>`<div class="card"><div class="r"><b>${fd(r.d)}</b><b>${R(pCs(r))}</b></div><small>${r.it.map(i=>i.q+'x '+esc(i.n)).join(', ')}${r.nt?' · '+esc(r.nt):''}</small><div style="margin-top:.3rem"><small>${pQt(r)} brownies · ${R(pCs(r)/pQt(r))} por unidade</small></div><div class="acts"><button class="btn s d" data-a="dr" data-t="pd" data-i="${r.id}">Excluir</button></div></div>`).join('')}
 function vender(){
- const P=S.p.filter(p=>p.on!==false),cart=P.filter(p=>V.cart[p.id]),G=sum(cart,p=>V.cart[p.id]*p.pr),ds=Math.min(G,num(V.ds)),T0=G-ds,Lc=T0-sum(cart,p=>V.cart[p.id]*p.c);
+ const SK=bst(),P=S.p.filter(p=>p.on!==false),cart=P.filter(p=>V.cart[p.id]),G=sum(cart,p=>V.cart[p.id]*p.pr),ds=Math.min(G,num(V.ds)),T0=G-ds,Lc=T0-sum(cart,p=>V.cart[p.id]*p.c);
  const names=[...new Set(S.c.map(c=>c.n).concat(S.s.map(s=>s.cl)).filter(Boolean))];
  return head('vender')+`<label>Cliente (opcional)<input data-f="cl" list="cls" value="${esc(V.cl)}" placeholder="Nome de quem comprou" autocomplete="off"></label><datalist id="cls">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`
  +'<div class="lb">Onde vendeu</div>'+chips('loc',list('loc').map(x=>[x,esc(x)]),V.loc)+`<label>Data<input type="date" data-f="date" value="${V.date}"></label><h2>Escolha os <em>brownies.</em></h2>`
- +P.map(p=>`<div class="card r"><div><b>${esc(p.n)}</b><br><small>${R(p.pr)}</small></div><div class="st"><button data-a="qty" data-id="${p.id}" data-d="-1" aria-label="Menos">−</button><b>${V.cart[p.id]||0}</b><button data-a="qty" data-id="${p.id}" data-d="1" aria-label="Mais">+</button></div></div>`).join('')
+ +P.map(p=>`<div class="card r"><div><b>${esc(p.n)}</b><br><small>${R(p.pr)}${p.n in SK?' · '+(SK[p.n]-(V.cart[p.id]||0))+' em estoque':''}</small></div><div class="st"><button data-a="qty" data-id="${p.id}" data-d="-1" aria-label="Menos">−</button><b>${V.cart[p.id]||0}</b><button data-a="qty" data-id="${p.id}" data-d="1" aria-label="Mais">+</button></div></div>`).join('')
  +`<label>Desconto (R$, opcional)<input data-f="ds" inputmode="decimal" value="${esc(V.ds)}" placeholder="0"></label><div class="card r"><span>Total</span><b style="font:700 1.5rem 'Libre Baskerville',Georgia,serif">${R(T0)}</b></div><small>Lucro desta venda: ${R(Lc)}</small>`
  +'<h2>Forma de <em>pagamento.</em></h2>'+chips('mode',[['now','Pago agora'],['part','Entrada + resto depois'],['later','Pagar depois']],V.mode)
  +(V.mode==='later'?'':'<div class="lb">Forma</div>'+chips('pay',list('pg').map(x=>[x,esc(x)]),V.m))
