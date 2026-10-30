@@ -2,14 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>GV Sweet · Gestão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f5f8;--card:#fff;--ink:#0b0d12;--mute:#5d6578;--line:#e2e5ec;--chip:#eceff6;--acc:#1f4fd8;--blk:#0b0d12;--ok:#0f8a5f;--bad:#c93a34;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 :root[data-theme=dark]{--bg:#07080b;--card:#10131a;--ink:#eef1f7;--mute:#98a1b6;--line:#1d222d;--chip:#161b25;--blk:#000;--ok:#4ade9f;--bad:#ff7a73}
-html{font-size:clamp(16px,.5vw + 12.5px,26px);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+html{touch-action:manipulation;font-size:clamp(16px,.5vw + 12.5px,26px);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.55 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:5.5rem}
 main{max-width:62rem;margin:0 auto;padding:1.2rem 1.1rem 2rem;width:100%}
@@ -191,6 +191,7 @@ const A={tab:d=>{V.tab=d.v;render();scrollTo(0,0)},per:d=>{V.per=d.v;render()},f
  csv:()=>{const r=[['Data','Cliente','Local','Itens','Total','Custo','Lucro','Pago','Falta']],f=n=>n.toFixed(2).replace('.',',');S.s.forEach(s=>r.push([s.d,s.cl,s.loc,s.it.map(i=>i.q+'x '+i.n).join(' | '),f(tot(s)),f(cst(s)),f(tot(s)-cst(s)),f(pago(s)),f(saldo(s))]));
   dl('gv-sweet-vendas-'+today()+'.csv','\ufeff'+r.map(x=>x.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(';')).join('\n'))},
  wipe:(d,b)=>ask(b,'Tem certeza?',()=>{const c=S.cfg;S=blank();S.cfg=c;save();render();toast('Tudo apagado')})};
+document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&A[b.dataset.a])A[b.dataset.a](b.dataset,b)});
 document.addEventListener('input',e=>{const t=e.target.dataset;if(t.v)V[t.v]=e.target.value;if(t.pf)PV[t.pf]=e.target.value;if(t.pq){PV.cart[t.pq]=Math.max(0,parseInt(e.target.value)||0);updP()}});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
